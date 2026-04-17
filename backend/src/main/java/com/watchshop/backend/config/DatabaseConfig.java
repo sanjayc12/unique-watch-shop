@@ -12,11 +12,15 @@ public class DatabaseConfig {
 
     @Bean
     public DataSource dataSource() throws URISyntaxException {
+        // Check all possible environment variables Render might provide
         String databaseUrl = System.getenv("DATABASE_URL");
+        if (databaseUrl == null) databaseUrl = System.getenv("INTERNAL_DATABASE_URL");
         
-        // Render usually sets these separately if they aren't in the URL
         String envUser = System.getenv("DATABASE_USER");
+        if (envUser == null) envUser = System.getenv("DB_USER");
+        
         String envPass = System.getenv("DATABASE_PASSWORD");
+        if (envPass == null) envPass = System.getenv("DB_PASSWORD");
 
         if (databaseUrl == null) {
             // Local fallback
