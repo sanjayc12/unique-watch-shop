@@ -13,6 +13,11 @@ public class DatabaseConfig {
     @Bean
     public DataSource dataSource() throws URISyntaxException {
         String databaseUrl = System.getenv("DATABASE_URL");
+        
+        // Render usually sets these separately if they aren't in the URL
+        String envUser = System.getenv("DATABASE_USER");
+        String envPass = System.getenv("DATABASE_PASSWORD");
+
         if (databaseUrl == null) {
             // Local fallback
             return DataSourceBuilder.create()
@@ -24,9 +29,12 @@ public class DatabaseConfig {
         }
 
         URI dbUri = new URI(databaseUrl);
-        String username = dbUri.getUserInfo().split(":")[0];
-        String password = dbUri.getUserInfo().split(":")[1];
-        String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
+        String username = (dbUri.getUserInfo() != null) ? dbUri.getUserInfo().split(":")[0] : envUser;
+        String password = (dbUri.getUserInfo() != null) ? dbUri.getUserInfo().split(":")[1] : envPass;
+        
+        // Ensure we use the correct jdbc prefix
+        String cleanPath = dbUri.getPath();
+        String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + cleanPath;
 
         return DataSourceBuilder.create()
                 .url(dbUrl)
